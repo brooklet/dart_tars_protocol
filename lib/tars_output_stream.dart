@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_tars_protocol/tars_encode_exception.dart';
-import 'package:dart_tars_protocol/tars_struct.dart';
+import './tars_encode_exception.dart';
+import './tars_struct.dart';
 
 class BinaryWriter {
   List<int> buffer;

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:dart_tars_protocol/tars_encode_exception.dart';
-import 'package:dart_tars_protocol/tars_struct.dart';
+import './tars_encode_exception.dart';
+import './tars_struct.dart';
 
 class TarsDisplayer {
   late StringBuffer sb;
@@ -22,7 +22,7 @@ class TarsDisplayer {
     }
   }
 
-  TarsDisplayer? Display(dynamic value, String? fieldName) {
+  TarsDisplayer? display(dynamic value, String? fieldName) {
     if (value is bool) {
       return DisplayBool(value, fieldName);
     }
@@ -102,10 +102,10 @@ class TarsDisplayer {
     sb.write('\n');
     var jd = TarsDisplayer(sb, level: _level + 1);
     for (var o in v) {
-      jd.Display(o, null);
+      jd.display(o, null);
     }
 
-    Display(']', null);
+    display(']', null);
     return this;
   }
 
@@ -128,12 +128,12 @@ class TarsDisplayer {
     var jd1 = TarsDisplayer(sb, level: _level + 1);
     var jd = TarsDisplayer(sb, level: _level + 2);
     for (var key in m.keys) {
-      jd1.Display('(', null);
-      jd.Display(key, null);
-      jd.Display(m[key], null);
-      jd1.Display(')', null);
+      jd1.display('(', null);
+      jd.display(key, null);
+      jd.display(m[key], null);
+      jd1.display(')', null);
     }
-    Display('}', null);
+    display('}', null);
     return this;
   }
 
@@ -155,9 +155,9 @@ class TarsDisplayer {
     sb.write('\n');
     var jd = TarsDisplayer(sb, level: _level + 1);
     for (var o in v) {
-      jd.Display(o, null);
+      jd.display(o, null);
     }
-    Display(']', null);
+    display(']', null);
     return this;
   }
 
@@ -169,7 +169,7 @@ class TarsDisplayer {
       return this;
     } else {
       for (var item in v) {
-        Display(item, fieldName);
+        display(item, fieldName);
       }
 
       return this;
@@ -177,15 +177,15 @@ class TarsDisplayer {
   }
 
   TarsDisplayer DisplayTarsStruct(TarsStruct? v, String? fieldName) {
-    Display('{', fieldName);
+    display('{', fieldName);
     if (null == v) {
       sb.write('\t');
       sb.write('null');
     } else {
-      v.display(sb, _level + 1);
+      v.displayAsString(sb, _level + 1);
     }
 
-    Display('}', null);
+    display('}', null);
     return this;
   }
 }

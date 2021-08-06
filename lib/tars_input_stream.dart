@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:core';
+import 'dart:core';
 import 'dart:typed_data';
 
-import 'package:dart_tars_protocol/tars_decode_exception.dart';
-import 'package:dart_tars_protocol/tars_struct.dart';
+import './tars_decode_exception.dart';
+import './tars_struct.dart';
 
 class HeadData {
   int type = 0;
@@ -17,7 +19,9 @@ class HeadData {
 class BinaryReader {
   Uint8List buffer;
   int position = 0;
+
   BinaryReader(this.buffer);
+
   int get length => buffer.length;
 
   /// 从当前流中读取下一个字节，并使流的当前位置提升 1 个字节
@@ -92,6 +96,7 @@ class BinaryReader {
 
 class TarsInputStream {
   late BinaryReader br;
+
   TarsInputStream(Uint8List _ls) {
     br = BinaryReader(_ls);
   }
@@ -248,9 +253,9 @@ class TarsInputStream {
     } else if (data is String || data == String) {
       data = readString(tag, isRequire);
     } else if (data is List || data == List) {
-      data = readList<T>(tag, isRequire);
+      data = readList<T>(data, tag, isRequire);
     } else if (data is Map || data == Map) {
-      data = readMap(tag, isRequire);
+      data = readMap(data, tag, isRequire);
     } else if (data is TarsStruct || data == TarsStruct) {
       data = readTarsStruct(data, tag, isRequire);
     } else {
@@ -440,8 +445,12 @@ class TarsInputStream {
   /// 读取Map
   /// 需要指定键、值的类型
   /// 对应Tars类型：Map
-  Map<K, V> readMap<K, V>(int tag, bool isRequire) {
-    var map = <K, V>{};
+  Map<K, V> readMap<K, V>(Map<K, V> data, int tag, bool isRequire) {
+    Iterable<MapEntry<K, V>> it = data.entries;
+    MapEntry<K, V> en = it.first;
+    K k = en.key;
+    V v = en.value;
+    var map = Map<K, V>();
     if (skipToTag(tag)) {
       var hd = HeadData();
       readHead(hd);
@@ -451,10 +460,87 @@ class TarsInputStream {
         if (size < 0) {
           throw TarsDecodeException('size invalid:$size');
         }
-
         for (var i = 0; i < size; ++i) {
-          var mk = read(K, 0, true);
-          var mv = read(V, 1, true);
+          var mk = read(k, 0, true);
+          var mv = read(v, 1, true);
+          if (mk != null) {
+            if (map.containsKey(mk)) {
+              map[mk] = mv;
+            } else {
+              map.addAll({mk: mv});
+            }
+          }
+        }
+      } else {
+        throw TarsDecodeException('type mismatch.');
+      }
+    } else if (isRequire) {
+      throw TarsDecodeException('require field not exist.');
+    }
+    return map;
+  }
+
+  /// 读取 k list<V> 结构 Map
+  /// 需要指定键、list值的类型
+  /// 对应Tars类型：Map
+  Map<K, List<V>> readMapList<K, V>(
+      Map<K, List<V>> source, int tag, bool isRequire) {
+    var map = Map<K, List<V>>();
+    Iterable<MapEntry<K, List<V>>> it = source.entries;
+    MapEntry<K, List<V>> en = it.first;
+    K k = en.key;
+    List<V> v = en.value;
+    if (skipToTag(tag)) {
+      var hd = HeadData();
+      readHead(hd);
+      var t = TarsStructType.values[hd.type];
+      if (t == TarsStructType.MAP) {
+        var size = readInt(0, true);
+        if (size < 0) {
+          throw TarsDecodeException('size invalid:$size');
+        }
+        for (var i = 0; i < size; ++i) {
+          var mk = read<K>(k, 0, true);
+          var mv = read<V>(v, 1, true);
+          if (mk != null) {
+            if (map.containsKey(mk)) {
+              map[mk] = mv;
+            } else {
+              map.addAll({mk: mv});
+            }
+          }
+        }
+      } else {
+        throw TarsDecodeException('type mismatch.');
+      }
+    } else if (isRequire) {
+      throw TarsDecodeException('require field not exist.');
+    }
+    return map;
+  }
+
+  /// 读取 k map<V2,V2> 结构 Map
+  /// 需要指定键、子Map键值的类型
+  /// 对应Tars类型：Map
+  Map<K, Map<K2, V2>> readMapMap<K, K2, V2>(
+      Map<K, Map<K2, V2>> source, int tag, bool isRequire) {
+    var map = Map<K, Map<K2, V2>>();
+    Iterable<MapEntry<K, Map<K2, V2>>> it = source.entries;
+    MapEntry<K, Map<K2, V2>> en = it.first;
+    K k = en.key;
+    Map<K2, V2> v = en.value;
+    if (skipToTag(tag)) {
+      var hd = HeadData();
+      readHead(hd);
+      var t = TarsStructType.values[hd.type];
+      if (t == TarsStructType.MAP) {
+        var size = readInt(0, true);
+        if (size < 0) {
+          throw TarsDecodeException('size invalid:$size');
+        }
+        for (var i = 0; i < size; ++i) {
+          var mk = read<K>(k, 0, true);
+          var mv = readMap<K2, V2>(v, 1, true);
           if (mk != null) {
             if (map.containsKey(mk)) {
               map[mk] = mv;
@@ -474,7 +560,7 @@ class TarsInputStream {
 
   /// 读取列表
   /// 对应Tars类型：List
-  List<T> readList<T>(int tag, bool isRequire) {
+  List<T> readList<T>(dynamic data, int tag, bool isRequire) {
     var ls = <T>[];
     if (skipToTag(tag)) {
       var hd = HeadData();
@@ -487,7 +573,7 @@ class TarsInputStream {
             if (size < 0) throw TarsDecodeException('size invalid: $size');
             ls = <T>[];
             for (var i = 0; i < size; ++i) {
-              ls.add(read(T, 0, true));
+              ls.add(read(data[0], 0, true));
             }
           }
           break;
