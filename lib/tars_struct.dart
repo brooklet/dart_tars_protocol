@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import './tars_input_stream.dart';
 import './tars_output_stream.dart';
+import './tars_deep_copyable.dart';
 
 enum TarsStructType {
   BYTE,
@@ -18,9 +21,15 @@ enum TarsStructType {
   SIMPLE_LIST,
 }
 
-abstract class TarsStruct {
+abstract class TarsStruct extends DeepCopyable {
   static int TARS_MAX_STRING_LENGTH = 100 * 1024 * 1024;
   void writeTo(TarsOutputStream _os);
   void readFrom(TarsInputStream _is);
   void displayAsString(StringBuffer sb, int level);
+
+  Uint8List toByteArray() {
+    TarsOutputStream os = new TarsOutputStream();
+    writeTo(os);
+    return os.toUint8List();
+  }
 }

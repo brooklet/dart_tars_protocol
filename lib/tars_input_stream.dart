@@ -594,8 +594,10 @@ class TarsInputStream {
       readHead(hd);
       var t = TarsStructType.values[hd.type];
       if (t == TarsStructType.STRUCT_BEGIN) {
-        ts.readFrom(this);
+        var copyTs = ts.deepCopy() as TarsStruct;
+        copyTs.readFrom(this);
         skipToStructEnd();
+        return copyTs;
       } else {
         throw TarsDecodeException('type mismatch.');
       }
