@@ -3,8 +3,8 @@ import 'dart:core';
 import 'dart:core';
 import 'dart:typed_data';
 
-import './tars_decode_exception.dart';
-import './tars_struct.dart';
+import 'tars_struct.dart';
+import 'tars_decode_exception.dart';
 
 class HeadData {
   int type = 0;
