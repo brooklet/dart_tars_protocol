@@ -4,7 +4,7 @@
 
 > dart编码及解码TUP组包协议数据。
 
-> Flutter中可以使用
+> 在Flutter中可以使用TarsMethodChannel来与原生端传输tars协议的参数(原生端的代码暂未开源)
 
 ## 使用
 
