@@ -33,7 +33,7 @@ main() {
 
 ## 参考
 
-[通过tars文件生成 Dart 代码的IDL工具的源码实现](https://github.com/brooklet/TarsCpp/tree/master/tools/tars2dartp)
+[通过tars文件生成 Dart 代码的IDL工具的源码实现](https://github.com/brooklet/TarsCpp/tree/master/tools/tars2dart)
 
 [TarsTup](https://github.com/TarsCloud/TarsTup)
 
